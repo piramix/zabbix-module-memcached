@@ -1,0 +1,26 @@
+This directory contains memcached module, which extends functionality of Zabbix
+ Agent. 
+
+Run 'make' to build it. It should produce memcached.so.
+
+Using:
+
+1. copy memcached.so to the module directory, like LoadModulePath=/etc/zabbix/modules
+
+2. change config file add line : LoadModule=memcached.so
+
+3. cp zbx_module_memcached.conf to /etc/zabbix, modify it
+
+	memcached_inst_ports = 11211, 192.168.9.9:11212, 11213
+
+4. restart zabbix_agent daemon
+
+key: memcached.discovery
+value:
+	{"data":[{"{#MCPORT}":"11211"},{"{#MCPORT}":"11212"},{"{#MCPORT}":"11213"}]}
+    
+key: memcached.status[{#MCPORT},key]
+
+key: memcached.ping[{#MCPORT},key]
+
+Note: this module only support the digit value, other key will return: ZBX_NOTSUPPORTED: Not supported key
