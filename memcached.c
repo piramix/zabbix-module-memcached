@@ -37,8 +37,8 @@ static int	item_timeout = 0;
 const char	ZBX_MODULE_MEMCACHED_CONFIG_FILE[] = "/etc/zabbix/zbx_module_memcached.conf";
 
 char	*CONFIG_MEMCACHED_INSTANCE_PORT = NULL;
-char    *MEMCACHED_DEFAULT_INSTANCE_HOST = "127.0.0.1";
-char    *MEMCACHED_DEFAULT_INSTANCE_PORT = "11211";
+char	*MEMCACHED_DEFAULT_INSTANCE_HOST = "127.0.0.1";
+char	*MEMCACHED_DEFAULT_INSTANCE_PORT = "11211";
 
 
 #define ZBX_CFG_LTRIM_CHARS     "\t "
@@ -220,7 +220,6 @@ int	zbx_module_memcached_status(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	char		*CONFIG_SOURCE_IP = NULL;	
 	zbx_sock_t	s;
-	int		ret = SYSINFO_RET_FAIL;
 	char		*mc_host, *str_mc_port, *key;
 	unsigned int    mc_port;
 	char		mc_st_name[MAX_STRING_LEN];
@@ -228,6 +227,7 @@ int	zbx_module_memcached_status(AGENT_REQUEST *request, AGENT_RESULT *result)
 	const char      *buf;
 	char		*tmp;
 	char		*p;
+	int		ret = SYSINFO_RET_FAIL;
 	int		find = 0;
 	int		net_error = 0;
 
@@ -249,7 +249,7 @@ int	zbx_module_memcached_status(AGENT_REQUEST *request, AGENT_RESULT *result)
 	{
 		/* set optional error message */
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid number of parameters"));
-		return SYSINFO_RET_FAIL;
+		return ret;
 	}
 
 	/* for dev
@@ -323,7 +323,7 @@ int	zbx_module_memcached_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
 	char            *mc_host, *str_mc_port;
 	unsigned int    mc_port;
 	const char      *buf;
-	char            *rv;
+	char            rv[MAX_STRING_LEN];
 	int             mc_status = 0;
 	time_t          now;
 	char            str_time[MAX_STRING_LEN];
@@ -353,13 +353,8 @@ int	zbx_module_memcached_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
 	tm = localtime(&now);
 	strftime(str_time, MAX_STRING_LEN, "%Y%m%d%H%M%S", tm);
 
-	/* for dev
-	zabbix_log(LOG_LEVEL_INFORMATION, "module [memcached], func [zbx_module_memcached_ping], str_time:[%s]", str_time);
-	*/
-
 	zbx_snprintf(cmd, MAX_STRING_LEN, "set ZBX_PING 521 60 %d\r\n%s\r\nget ZBX_PING\r\nquit\r\n",strlen(str_time), str_time);
 	zbx_snprintf(hv, MAX_STRING_LEN, "STOREDVALUE ZBX_PING 521 %d%sEND", strlen(str_time), str_time);
-
 
 	if (SUCCEED == zbx_tcp_connect(&s, CONFIG_SOURCE_IP, mc_host, mc_port, 0))
 	{
@@ -373,7 +368,7 @@ int	zbx_module_memcached_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
 			zabbix_log(LOG_LEVEL_INFORMATION, "module [memcached], func [zbx_module_memcached_ping], send request successful");
 			*/
 
-			rv = zbx_strdup(NULL, "");
+			strscpy(rv, "");
 
 			while (NULL != (buf = zbx_tcp_recv_line(&s)))
 			{
@@ -393,8 +388,6 @@ int	zbx_module_memcached_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
 				mc_status = 1;
 			}
 		}
-
-		free(rv);
 
 		zbx_tcp_close(&s);
 	}
