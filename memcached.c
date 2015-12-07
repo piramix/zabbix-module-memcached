@@ -36,10 +36,9 @@ static int	item_timeout = 0;
 /* the path of config file */
 const char	ZBX_MODULE_MEMCACHED_CONFIG_FILE[] = "/etc/zabbix/zbx_module_memcached.conf";
 
-char	*CONFIG_MEMCACHED_INSTANCE_PORT = NULL;
-char	*MEMCACHED_DEFAULT_INSTANCE_HOST = "127.0.0.1";
-char	*MEMCACHED_DEFAULT_INSTANCE_PORT = "11211";
+char		*CONFIG_MEMCACHED_INSTANCE_PORT = NULL;
 
+static char	*MEMCACHED_DEFAULT_INSTANCE_HOST = "127.0.0.1";
 
 #define ZBX_CFG_LTRIM_CHARS     "\t "
 #define ZBX_CFG_RTRIM_CHARS     ZBX_CFG_LTRIM_CHARS "\r\n"
@@ -336,6 +335,12 @@ int	zbx_module_memcached_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
 	{
 		mc_host = get_rparam(request, 0);
 		str_mc_port = get_rparam(request, 1);
+		mc_port = atoi(str_mc_port);
+	}
+	else if (request->nparam == 1)
+	{
+		mc_host = MEMCACHED_DEFAULT_INSTANCE_HOST;
+		str_mc_port = get_rparam(request, 0);
 		mc_port = atoi(str_mc_port);
 	}
 	else
