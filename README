@@ -17,10 +17,10 @@ Using:
 
 key: memcached.discovery
 value:
-	{"data":[{"{#MCPORT}":"11211"},{"{#MCPORT}":"11212"},{"{#MCPORT}":"11213"}]}
+	{"data":[{"{#MCHOST}":"127.0.0.1","{#MCPORT}":"11211"},{"{#MCHOST}":"192.168.9.9","{#MCPORT}":"11212"},{"{#MCHOST}":"127.0.0.1","{#MCPORT}":"11213"}]}
     
-key: memcached.status[{#MCPORT},key]
+key: memcached.status[{#MCHOST},{#MCPORT},key]
 
-key: memcached.ping[{#MCPORT},key]
+key: memcached.ping[{#MCHOST},{#MCPORT},key]
 
 Note: this module only support the digit value, other key will return: ZBX_NOTSUPPORTED: Not supported key

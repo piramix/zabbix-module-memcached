@@ -6,7 +6,7 @@ This directory contains a sample module, which extends functionality of Zabbix A
 Status
 ======
 
-This module is production ready.
+This module is testing.
 
 Installation
 ============
@@ -26,7 +26,7 @@ Installation
 1. cp zbx_module_memcached.conf to /etc/zabbix, modify it
 
 
-    memcached_inst_ports = 11211, 192.16.9.9:11212, 11213
+    memcached_inst_ports = 11211, 192.168.9.9:11212, 11213
 
 1. restart zabbix_agent daemon
 
@@ -41,7 +41,7 @@ Synopsis
 
 **value:**
 
-    {"data":[{"{#MCHOST}":"127.0.0.1","{#MCPORT}":"11211"},{"{#MCHOST}":"192.16.9.9","{#MCPORT}":"11212"},{"{#MCHOST}":"127.0.0.1","{#MCPORT}":"11213"}]}
+    {"data":[{"{#MCHOST}":"127.0.0.1","{#MCPORT}":"11211"},{"{#MCHOST}":"192.168.9.9","{#MCPORT}":"11212"},{"{#MCHOST}":"127.0.0.1","{#MCPORT}":"11213"}]}
     
 **key:** *memcached.status[{#MCHOST},{#MCPORT},key]*
 
