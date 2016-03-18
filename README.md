@@ -6,7 +6,7 @@ This directory contains a sample module, which extends functionality of Zabbix A
 Status
 ======
 
-This module is testing.
+This module is testing and for zabbix version 2.x.
 
 Installation
 ============
@@ -15,6 +15,7 @@ Installation
 
 	$ git clone https://github.com/cnshawncao/zabbix-module-memcached.git
 	$ cp -r zabbix-module-memcached zabbix-x.x.x/src/modules/memcached	# zabbix-x.x.x is zabbix version
+	$ cd zabbix-x.x.x/src/modules/memcached	# zabbix-x.x.x is zabbix version
 ```
 
 1. run 'make' to build it. It should produce memcached.so.
