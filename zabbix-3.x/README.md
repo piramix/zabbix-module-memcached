@@ -6,7 +6,7 @@ This directory contains a sample module, which extends functionality of Zabbix A
 Status
 ======
 
-This module is testing and for zabbix version 2.x.
+This module is testing, and for zabbix version 3.x.
 
 Installation
 ============
@@ -14,11 +14,8 @@ Installation
 ```bash
 
 	$ git clone https://github.com/cnshawncao/zabbix-module-memcached.git
-	$ cp -r zabbix-module-memcached/zabbix-2.x zabbix-2.x.x/src/modules/memcached	# zabbix-2.x.x is zabbix version
-	**or**
-	$ cp -r zabbix-module-memcached/zabbix-3.x zabbix-3.x.x/src/modules/memcached	# zabbix-3.x.x is zabbix version
-	$ cd zabbix-x.x.x/src/modules/memcached	# zabbix-x.x.x is zabbix version
-
+	$ cp -r zabbix-module-memcached zabbix-3.x.x/src/modules/memcached	# zabbix-3.x.x is zabbix version
+	$ cd zabbix-x.x.x/src/modules/memcached	# zabbix-3.x.x is zabbix version
 ```
 
 1. run 'make' to build it. It should produce memcached.so.
