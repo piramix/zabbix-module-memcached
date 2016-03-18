@@ -18,7 +18,7 @@
 **
 ** Author: Cao Qingshan <caoqingshan@kingsoft.com>
 **
-** Version: 1.1 Last update: 2015-12-03 20:00
+** Version: 2.0 Last update: 2015-12-03 20:00
 **
 **/
 
