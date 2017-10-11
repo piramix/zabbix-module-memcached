@@ -47,6 +47,7 @@ int	zbx_module_memcached_load_config(int requirement);
 int	zbx_module_memcached_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	zbx_module_memcached_status(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	zbx_module_memcached_ping(AGENT_REQUEST *request, AGENT_RESULT *result);
+int     zbx_module_memcached_get(AGENT_REQUEST *request, AGENT_RESULT *result);
 
 static ZBX_METRIC keys[] =
 /*      KEY                     FLAG		        FUNCTION        	          TEST PARAMETERS */
@@ -54,6 +55,7 @@ static ZBX_METRIC keys[] =
 	{"memcached.discovery",	0,			zbx_module_memcached_discovery,	  NULL},
 	{"memcached.status",	CF_HAVEPARAMS,		zbx_module_memcached_status,	  NULL},
 	{"memcached.ping",	CF_HAVEPARAMS,		zbx_module_memcached_ping,	  NULL},
+	{"memcached.get",       CF_HAVEPARAMS,          zbx_module_memcached_get,         NULL},
 	{NULL}
 };
 
@@ -410,6 +412,124 @@ int	zbx_module_memcached_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
 }
 
 
+int     zbx_module_memcached_get(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+        char            *CONFIG_SOURCE_IP = NULL;
+        zbx_socket_t    s;
+        char            *mc_host, *str_mc_port, *key;
+        unsigned int    mc_port;
+        char            mc_st_name[MAX_STRING_LEN];
+        zbx_uint64_t    mc_st_value;
+        const char      *buf;
+        char            *tmp;
+        char            *p;
+        int             ret = SYSINFO_RET_FAIL;
+        int             find = 0;
+        int             valuestart = 0;
+        int             net_error = 0;
+        zbx_uint64_t    mcv_int;
+        char            mcv_key[MAX_STRING_LEN];
+        char            mcv_str[MAX_STRING_LEN];
+        char            *memquery = NULL;
+        size_t          memquery_alloc = 256, memquery_offset = 0;
+
+
+
+        if (request->nparam == 3)
+        {
+                mc_host = get_rparam(request, 0);
+                str_mc_port = get_rparam(request, 1);
+                mc_port = atoi(str_mc_port);
+                key = get_rparam(request, 2);
+        }
+        else if (request->nparam == 2)
+        {
+                mc_host = MEMCACHED_DEFAULT_INSTANCE_HOST;
+                str_mc_port = get_rparam(request, 0);
+                //str_mc_port = "11211";
+                mc_port = atoi(str_mc_port);
+                key = get_rparam(request, 1);
+        }
+        else
+        {
+                /* set optional error message */
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid number of parameters"));
+                return ret;
+        }
+
+        /* for dev
+        zabbix_log(LOG_LEVEL_INFORMATION, "module [memcached], func [zbx_module_memcached_status], args:[%s,%d]", mc_host, mc_port);
+        */
+
+        memquery = zbx_malloc(memquery, memquery_alloc);
+        zbx_snprintf_alloc(&memquery, &memquery_alloc, &memquery_offset,
+                        "get %s\r\nquit\r\n",
+                        key);
+
+
+        if (SUCCEED == zbx_tcp_connect(&s, CONFIG_SOURCE_IP, mc_host, mc_port, 0, ZBX_TCP_SEC_UNENCRYPTED, NULL, NULL))
+        {
+                /* for dev
+                zabbix_log(LOG_LEVEL_INFORMATION, "module [memcached], func [zbx_module_memcached_status], connect to [%s:%d] successful", mc_host, mc_port);
+                */
+
+                if (SUCCEED == zbx_tcp_send_raw(&s, memquery))
+                {
+                        /* for dev
+                        zabbix_log(LOG_LEVEL_INFORMATION, "module [memcached], func [zbx_module_memcached_status], send request successful");
+                        */
+
+                        while (NULL != (buf = zbx_tcp_recv_line(&s)) && 0 != strcmp(buf, "END"))
+                        {
+                                if (valuestart){
+                                    if (1 == sscanf(buf, ZBX_FS_UI64, &mcv_int)){
+                                        zabbix_log(LOG_LEVEL_INFORMATION, "module [memcached], func [zbx_module_memcached_get], int [%lu]", mcv_int);
+                                        find = 1;
+                                        SET_UI64_RESULT(result, mcv_int);
+                                        ret = SYSINFO_RET_OK;
+                                        break;
+                                    }else
+                                    if (1 == sscanf(buf, "%s", mcv_str)){
+                                        zabbix_log(LOG_LEVEL_INFORMATION, "module [memcached], func [zbx_module_memcached_get], str [%s]", mcv_str);
+                                        find = 1;
+                                        SET_STR_RESULT(result, zbx_strdup(NULL,mcv_str));
+                                        ret = SYSINFO_RET_OK;
+                                        break;
+                                    }
+                                }else
+                                if (1 == sscanf(buf, "VALUE" "%s" "%*s" "%*s", mcv_key)){
+                                        zabbix_log(LOG_LEVEL_INFORMATION, "module [memcached], func [zbx_module_memcached_get], key [%s]", mcv_key);
+                                        valuestart = 1;
+                                }
+
+                        }
+                }
+                else
+                {
+                        net_error = 1;
+                        zabbix_log(LOG_LEVEL_WARNING, "module [memcached], func [zbx_module_memcached_status],get memcached status error: [%s]", zbx_socket_strerror());
+                        SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Get memcached status error [%s]", zbx_socket_strerror()));
+                }
+
+                zbx_tcp_close(&s);
+        }
+        else
+        {
+                net_error = 1;
+                zabbix_log(LOG_LEVEL_WARNING, "module [memcached], func [zbx_module_memcached_status], get memcached status error: [%s]", zbx_socket_strerror());
+                SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Get memcached status error [%s]", zbx_socket_strerror()));
+        }
+
+        if (find != 1 && net_error == 0)
+        {
+                zabbix_log(LOG_LEVEL_WARNING, "module [memcached], func [zbx_module_memcached_status], can't find key: [%s]", key);
+                SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Not supported key [%s]", key));
+        }
+
+
+        zbx_free(memquery);
+        return ret;
+}
 /******************************************************************************
  *                                                                            *
  * Function: zbx_module_init                                                  *
